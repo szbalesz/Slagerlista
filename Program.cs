@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using MySqlConnector;
 
 namespace slagerlista
 {
@@ -35,6 +36,7 @@ namespace slagerlista
                         break;
                 }
             } while (hova == "");
+            mentes();
             //amíg a program fut addíg a menüt jeleníti meg
             while (true)
             {
@@ -69,7 +71,7 @@ namespace slagerlista
                         break;
                 }
             } while (honnan == "");
-            
+
             //ha fájlt választott a felhasználó
             if (honnan == "file")
             {
@@ -86,27 +88,39 @@ namespace slagerlista
 
                 }
             }//ha adatbázist választott af elhasználó
-            if(honnan == "database")
+            if (honnan == "database")
             {
                 try
                 {
-
+                    string connectionstring = @"server=localhost;user=root;database=slagerlista;";
+                    MySqlConnection kapcsolat = new MySqlConnection(connectionstring);
+                    kapcsolat.Open();
+                    string sql = "SELECT * FROM zenek";
+                    MySqlCommand mSqlCmd = new MySqlCommand(sql, kapcsolat);
+                    MySqlDataReader adatok = mSqlCmd.ExecuteReader();
+                    while (adatok.Read())
+                    {
+                        zenek.Add((string)adatok[0], (int)adatok[1]);
+                    }
+                    kapcsolat.Close();
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine(e.Message);;
+                    Console.WriteLine("Nem sikerült az adatok betöltése az adatbázisból!");
+                    Console.WriteLine(e.Message);
+                    Console.ReadKey();
                 }
             }
         }
         static void menu()
         {
             //menü megjelenítése, és a menüpontok kiválasztása
-            string[] menupontok = { "Új adatok bevitele" , "Top 10 kiíratása","Kilépés"};
+            string[] menupontok = { "Új adatok bevitele", "Top 10 kiíratása", "Kilépés" };
 
             Console.Clear();
             for (int i = 0; i < menupontok.Length; i++)
             {
-                Console.WriteLine($"[{i+1}] {menupontok[i]}");
+                Console.WriteLine($"[{i + 1}] {menupontok[i]}");
             }
             ConsoleKey valasz = Console.ReadKey().Key;
             switch (valasz)
@@ -128,7 +142,7 @@ namespace slagerlista
         }
         static void ujadat()
         {
-          //10 új adat bekérése, és tárolása
+            //10 új adat bekérése, és tárolása
             for (int i = 1; i <= 10; i++)
             {
                 Console.Clear();
@@ -172,7 +186,7 @@ namespace slagerlista
         }
         static void mentes()
         {
-           
+
             //ha fájlt választott a felhasználó
             if (hova == "file")
             {
@@ -185,9 +199,42 @@ namespace slagerlista
                 ujFajl.Close();
             }
             //ha adatbázist választott a felhasználó
-            if(hova == "database")
+            if (hova == "database")
             {
                 //adatbázis
+                string connectionstring = @"server=localhost;user=root;database=slagerlista;";  
+                try
+                {
+                    MySqlConnection kapcsolat = new MySqlConnection(connectionstring);
+                    kapcsolat.Open();
+                    MySqlCommand torles = new MySqlCommand($"DELETE FROM `zenek` WHERE szavazat > 0;", kapcsolat);
+                    torles.ExecuteNonQuery();
+                    kapcsolat.Close();
+                }
+                catch (MySqlException e)
+                {
+                    Console.WriteLine("Nem sikerült a régi adatok törlése!");
+                    Console.WriteLine(e.Message);
+                    Console.ReadKey();
+                }
+
+                foreach (var zene in zenek)
+                {
+                    try
+                    {
+                        MySqlConnection kapcsolat = new MySqlConnection(connectionstring);
+                        kapcsolat.Open();
+                        MySqlCommand hozzadas = new MySqlCommand($"INSERT INTO `zenek` (`zenecimszerzo`, `szavazat`) VALUES ('{zene.Key}', '{zene.Value}');", kapcsolat);
+                        hozzadas.ExecuteNonQuery();
+                        kapcsolat.Close();
+                    }
+                    catch(MySqlException e)
+                    {
+                        Console.WriteLine("Nem sikerült az új adatok felvitele az adatbázisba!");
+                        Console.WriteLine(e.Message);
+                        Console.ReadKey();
+                    }
+                }
             }
         }
     }
