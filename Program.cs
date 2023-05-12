@@ -154,12 +154,11 @@ namespace slagerlista
         {
             //top 10 kiíratása
             Console.Clear();
-            //a zenéket listává alakítjuk
-            var lista = zenek.ToList();
-            //ezt a listát rendezzük
-            lista.Sort((pair1, pair2) => pair2.Value.CompareTo(pair1.Value));
+            //a zenék rendezése
+            var rendezett = zenek.OrderByDescending(zene => zene.Value);
+            //megszámoljuk, hogy hanyadik zene következik a kiíratás közben
             var hanyadik = 0;
-            foreach (var zene in lista)
+            foreach (var zene in rendezett)
             {
                 Console.WriteLine($"{zene.Value} {zene.Key}.");
                 hanyadik++;
