@@ -13,6 +13,7 @@ namespace slagerlista
         static string hova = "";
         static void Main(string[] args)
         {
+            Console.Title = "Slágerlista";
             adatokbetoltese();
             //megkérdezzük a felhasználót, hogy hová szeretné menteni az adatokat
             do
